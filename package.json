@@ -4,12 +4,9 @@
   "description": "Store mqtt payloads to a mysql database",
   "main": "index.js",
   "scripts": {
+    "firstrun": "./install.js && node index.js --firstrun",
     "start": "node --no-deprecation index.js",
-    "background": "npm run start&",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "bin":{
-    "install":"./install.js"
   },
   "repository": {
     "type": "git",
