@@ -1,0 +1,34 @@
+{
+  "name": "mqtt2mysql",
+  "version": "1.0.0",
+  "description": "Store mqtt payloads to a mysql database",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --no-deprecation index.js",
+    "background": "npm run start&",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin":{
+    "install":"./install.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielruuth/mqtt2mysql.git"
+  },
+  "keywords": [
+    "node",
+    "mqtt",
+    "mysql"
+  ],
+  "author": "Daniel Ruuth",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/danielruuth/mqtt2mysql/issues"
+  },
+  "homepage": "https://github.com/danielruuth/mqtt2mysql#readme",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "knex": "^1.0.7",
+    "mqtt": "^4.3.7"
+  }
+}
