@@ -25,6 +25,7 @@
   "homepage": "https://github.com/danielruuth/mqtt2mysql#readme",
   "dependencies": {
     "dotenv": "^16.0.0",
+    "express": "^4.17.3",
     "knex": "^1.0.7",
     "mqtt": "^4.3.7"
   }

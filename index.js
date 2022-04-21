@@ -61,6 +61,56 @@ class mqtt2mysql {
     this.client.on('reconnect', () => {
       console.log('Issuing reconnect');
     })
+
+    this.initapi();
+  }
+
+  initapi () {
+    var express = require("express");
+    var app = express();
+    app.listen(3000, () => {
+     console.log("Server running on port 3000");
+    });
+
+    //Return count number of points from topic
+    app.get("/:topic/:count", (req, res, next) => {
+      const topic = req.params.topic.replaceAll(':','/');
+      const count = req.params.count || 10;
+      this.knex('payloads').select().where('topic',topic).orderBy('received_at','desc').limit(count)
+      .then((result) => {
+        if (result.length > 0) {
+          res.json({'data': result});
+        } else {
+          res.json({'data':[]});
+        }
+      })
+      .catch((error) => {
+        res.json({'error':error})
+      })
+    });
+
+    app.get('/:topic/:startdate/:enddate', (req, res) => {
+      const startdate = Math.floor(Date.parse(req.params.startdate)/1000)
+      const enddate = Math.floor(Date.parse(req.params.enddate)/1000)
+      const topic = req.params.topic.replaceAll(':','/');
+      console.log(enddate,startdate)
+      if (isNaN(enddate) || isNaN(startdate)) {
+        res.json({error:'Unrecognized date format'});
+        return;
+      }
+      this.knex.select().fromRaw("payloads where (received_at between FROM_UNIXTIME(?) and FROM_UNIXTIME(?)) and (topic = ?) order by received_at desc", [startdate, enddate, topic])
+      .then((rows) => {
+        const result = Object.values(JSON.parse(JSON.stringify(rows)));
+        if (result.length > 0) {
+          res.json({'data': result});
+        } else {
+          res.json({'data':[]});
+        }
+      })
+      .catch((error) => {
+        res.json({'error':error})
+      })
+    })
   }
 
   storepayload (payload, topic) {
