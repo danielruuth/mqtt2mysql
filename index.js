@@ -100,7 +100,7 @@ class mqtt2mysql {
       })
     });
 
-    app.get('/:topic/:startdate/:enddate', (req, res) => {
+    app.get('/:topic/:startdate/:enddate/:concatination?', (req, res) => {
       const startdate = Math.floor(Date.parse(req.params.startdate)/1000)
       const enddate = Math.floor(Date.parse(req.params.enddate)/1000)
       const topic = req.params.topic.replaceAll(':','/');
@@ -109,11 +109,25 @@ class mqtt2mysql {
         res.json({error:'Unrecognized date format'});
         return;
       }
-      this.knex.select().fromRaw("payloads where (received_at between FROM_UNIXTIME(?) and FROM_UNIXTIME(?)) and (topic = ?) order by received_at desc", [startdate, enddate, topic])
+      var rawQuery = null;
+      if(req.params.concatination == 'daily') {
+        rawQuery = ` AVG( payload ) as payload, DAY( received_at ) as day FROM payloads WHERE DATE_SUB(  received_at , INTERVAL 1 DAY ) AND (received_at between FROM_UNIXTIME(${startdate}) and FROM_UNIXTIME(${enddate})) AND topic='${topic}' group by DAY( received_at )`;
+      }else if (req.params.concatination == 'weekly'){
+        rawQuery = ` AVG( payload ) as payload , WEEK( received_at ) as week FROM payloads WHERE DATE_SUB(  received_at , INTERVAL 1 WEEK ) AND (received_at between FROM_UNIXTIME(${startdate}) and FROM_UNIXTIME(${enddate})) AND topic='${topic}' group by WEEK( received_at )`;
+      }else{ //Hourly
+        rawQuery = ` AVG( payload ) as payload , HOUR( received_at ) as hour, DATE( received_at ) as date FROM payloads WHERE DATE_SUB(  received_at , INTERVAL 1 HOUR ) AND (received_at between FROM_UNIXTIME(${startdate}) and FROM_UNIXTIME(${enddate})) AND topic='${topic}' group by HOUR( received_at )`;
+      }
+
+      //this.knex.select('payload','received_at').fromRaw("payloads where (received_at between FROM_UNIXTIME(?) and FROM_UNIXTIME(?)) and (topic = ?) order by received_at desc", [startdate, enddate, topic])
+      this.knex.select(this.knex.raw(rawQuery))
       .then((rows) => {
         const result = Object.values(JSON.parse(JSON.stringify(rows)));
         if (result.length > 0) {
-          res.json({'data': result});
+          var retval = {
+            latest: result[0],
+            data: result
+          }
+          res.json(retval);
         } else {
           res.json({'data':[]});
         }
