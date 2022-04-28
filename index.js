@@ -1,6 +1,7 @@
 require('dotenv').config();
 const mqtt = require('mqtt')
 const knex = require('knex');
+var cors = require('cors');
 
 class mqtt2mysql {
   constructor () {
@@ -68,10 +69,20 @@ class mqtt2mysql {
   initapi () {
     var express = require("express");
     var app = express();
+    app.use(cors());
     app.listen(3000, () => {
      console.log("Server running on port 3000");
     });
 
+    app.get('/topics', (req, res) => {
+      this.knex('payloads').select('topic').distinct('topic')
+      .then((result) => {
+        res.json({data: result});
+      })
+      .catch((error) => {
+        res.json({error: error});
+      })
+    })
     //Return count number of points from topic
     app.get("/:topic/:count", (req, res, next) => {
       const topic = req.params.topic.replaceAll(':','/');
